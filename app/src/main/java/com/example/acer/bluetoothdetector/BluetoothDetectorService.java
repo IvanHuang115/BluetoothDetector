@@ -1,15 +1,13 @@
 package com.example.acer.bluetoothdetector;
 
-import android.content.Context;
+import android.app.IntentService;
+import android.app.Service;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.os.RemoteException;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.telephony.TelephonyManager;
+import android.os.IBinder;
+import android.os.RemoteException;
+import android.support.annotation.Nullable;
 import android.util.Log;
-import android.view.View;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import org.altbeacon.beacon.Beacon;
@@ -21,36 +19,41 @@ import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
 import org.altbeacon.beacon.service.RunningAverageRssiFilter;
 
-import java.sql.DriverManager;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
-/*
-import com.mysql.jdbc.Connection;
-import com.mysql.jdbc.ResultSet;
-import com.mysql.jdbc.Statement;
-*/
-
 import java.util.Calendar;
 import java.util.Collection;
 
-//import de.bezier.data.sql;
-
-/* TODO currently the service can technically run in the background, but it crashes when the main
-   activity closes beacause they are run in the same thread, need to run the service in a different
-   thread
+/**
+ * Created by Acer on 8/15/2016.
  */
 
-public class MainActivity extends AppCompatActivity {
+public class BluetoothDetectorService extends Service implements BeaconConsumer {
+    /*
+    final class ServiceThread implements Runnable {
 
-    private EditText ET_NAME;
-    private EditText ET_IP;
-    private EditText ET_PORT;
+        private int serviceID;
+        ServiceThread(int serviceID) {
+            this.serviceID = serviceID;
+        }
+
+        @Override
+        public void run() {
+            BeaconManager.setRssiFilterImplClass(RunningAverageRssiFilter.class);
+            RunningAverageRssiFilter.setSampleExpirationMilliseconds(2500l);
+
+            beacMan = BeaconManager.getInstanceForApplication(BluetoothDetectorService.this);
+            // Do not have to call beacMan.getBeaconParsers().add() if we stick to AltBeacon protocol
+            beacMan.bind(BluetoothDetectorService.this);
+
+        }
+    }
+    */
+
 
     private static final String TAG = "Beacon Test";
     private BeaconManager beacMan;
-
     // All beacons have been set to this UUID
     private static final String REGION_UUID = "A580C8B8-89FE-4548-8A24-472B7DE1224C";
     // Beacon 49893, Major: 0, Minor: 49893 ==> Beacon1
@@ -62,8 +65,6 @@ public class MainActivity extends AppCompatActivity {
     private static String P_USER;
     private static String DB_IP = "137.110.97.150";
     private static String DB_PORT = "3306";
-
-    /*
     private static final String DB_NAME = "app_test";
     private static final String DB_USER = "Ivan";
     private static final String DB_PASS = "Ivan";
@@ -73,55 +74,78 @@ public class MainActivity extends AppCompatActivity {
     private static final String COL_DAY = "DAY";
     private static final String COL_MS = "MS";
     private static final String COL_BEAC = "BEACON";
+
+    /*
+    public BluetoothDetectorService() {
+        super("BluetoothDetectorService");
+    }
     */
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        Log.d(TAG, "Activity Created");
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+    public void onCreate() {
+        super.onCreate();
+    }
 
-        TelephonyManager tManager = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
-        P_ID = tManager.getDeviceId();
-        Log.d(TAG, "device id: " + P_ID);
+    /*
+    @Override
+    protected void onHandleIntent(Intent intent) {
+        Toast.makeText(BluetoothDetectorService.this, "service started", Toast.LENGTH_SHORT).show();
+
+        Bundle b = intent.getExtras();
+        P_USER = b.getString("USER");
+        DB_IP = b.getString("IP");
+        DB_PORT = b.getString("PORT");
+
+        Log.d(TAG, "In service, user: " + P_USER + " IP: " + DB_IP + " PORT: " + DB_PORT);
+
 
         // Changes the delay for calculating distance from the default of 20 sec to 2.5 sec
         BeaconManager.setRssiFilterImplClass(RunningAverageRssiFilter.class);
         RunningAverageRssiFilter.setSampleExpirationMilliseconds(2500l);
 
-        beacMan = BeaconManager.getInstanceForApplication(this);
+        beacMan = BeaconManager.getInstanceForApplication(BluetoothDetectorService.this);
         // Do not have to call beacMan.getBeaconParsers().add() if we stick to AltBeacon protocol
-
-        ET_NAME = (EditText) findViewById(R.id.ET_NAME);
-        ET_IP = (EditText) findViewById(R.id.ET_IP);
-        ET_PORT = (EditText) findViewById(R.id.ET_PORT);
-
-        SharedPreferences sp = getSharedPreferences("BluetoothDetectorData", Context.MODE_PRIVATE);
-        P_USER = sp.getString("SP_USER", "");
-        DB_IP = sp.getString("SP_IP", "");
-        DB_PORT = sp.getString("SP_PORT", "");
-
-        Log.d(TAG, "user: " + P_USER + " ip: " + DB_IP + " port: " + DB_PORT);
-
-        if (P_USER.equals("") || DB_IP.equals("") || DB_PORT.equals("")) {
-            Toast.makeText(this, "Please enter your name and the IP address of your Raspberry Pi",
-                    Toast.LENGTH_LONG).show();
-        } else {
-            /* beacMan.bind(this) */;
-        }
-
-        ET_NAME.setText(P_USER);
-        ET_IP.setText(DB_IP);
-        ET_PORT.setText(DB_PORT);
+        beacMan.bind(BluetoothDetectorService.this);
     }
+    */
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        //beacMan.unbind(this);
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        //return super.onStartCommand(intent, flags, startId);
+        Toast.makeText(BluetoothDetectorService.this, "service started", Toast.LENGTH_SHORT).show();
+
+        Bundle b = intent.getExtras();
+        P_USER = b.getString("USER");
+        DB_IP = b.getString("IP");
+        DB_PORT = b.getString("PORT");
+
+        Log.d(TAG, "In service, user: " + P_USER + " IP: " + DB_IP + " PORT: " + DB_PORT);
+
+
+        // Changes the delay for calculating distance from the default of 20 sec to 2.5 sec
+        BeaconManager.setRssiFilterImplClass(RunningAverageRssiFilter.class);
+        RunningAverageRssiFilter.setSampleExpirationMilliseconds(2500l);
+
+        beacMan = BeaconManager.getInstanceForApplication(BluetoothDetectorService.this);
+        // Do not have to call beacMan.getBeaconParsers().add() if we stick to AltBeacon protocol
+        beacMan.bind(BluetoothDetectorService.this);
+
+        return START_STICKY;
     }
 
-    /*
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        beacMan.unbind(BluetoothDetectorService.this);
+    }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
     @Override
     public void onBeaconServiceConnect() {
         Log.d(TAG, "Entered onBeaconServiceConnect()");
@@ -204,35 +228,5 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "problem in startMonitoringBeaconsInRegion");
             e.printStackTrace();
         }
-    }
-    */
-
-    public void enterUserInfo(View v) {
-        P_USER = ET_NAME.getText().toString();
-        DB_IP = ET_IP.getText().toString();
-        DB_PORT = ET_PORT.getText().toString();
-
-        SharedPreferences sp = getSharedPreferences("BluetoothDetectorData", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sp.edit();
-        // TODO Check for blank entry, eliminate white spaces
-        editor.putString("SP_USER", ET_NAME.getText().toString());
-        editor.putString("SP_IP", ET_IP.getText().toString());
-        editor.putString("SP_PORT", ET_PORT.getText().toString());
-        editor.commit();
-
-        //beacMan.bind(this);
-    }
-
-    public void startServicePressed(View v) {
-        Intent i = new Intent(this, BluetoothDetectorService.class);
-        i.putExtra("USER", P_USER);
-        i.putExtra("IP", DB_IP);
-        i.putExtra("PORT", DB_PORT);
-        startService(i);
-    }
-
-    public void stopServicePressed(View v) {
-        Intent i = new Intent(this, BluetoothDetectorService.class);
-        stopService(i);
     }
 }

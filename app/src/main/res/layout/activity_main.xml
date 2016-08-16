@@ -48,8 +48,19 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Enter"
-            android:onClick="buttonPressed"/>
+            android:onClick="enterUserInfo"/>
 
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Start Service"
+            android:onClick="startServicePressed"/>
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Stop Service"
+            android:onClick="stopServicePressed"/>
     </LinearLayout>
 
 
