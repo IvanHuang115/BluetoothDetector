@@ -2,11 +2,13 @@ package com.example.acer.bluetoothdetector;
 
 import android.app.IntentService;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.support.annotation.Nullable;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -22,6 +24,7 @@ import org.altbeacon.beacon.service.RunningAverageRssiFilter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.Collection;
 
@@ -30,27 +33,6 @@ import java.util.Collection;
  */
 
 public class BluetoothDetectorService extends Service implements BeaconConsumer {
-    /*
-    final class ServiceThread implements Runnable {
-
-        private int serviceID;
-        ServiceThread(int serviceID) {
-            this.serviceID = serviceID;
-        }
-
-        @Override
-        public void run() {
-            BeaconManager.setRssiFilterImplClass(RunningAverageRssiFilter.class);
-            RunningAverageRssiFilter.setSampleExpirationMilliseconds(2500l);
-
-            beacMan = BeaconManager.getInstanceForApplication(BluetoothDetectorService.this);
-            // Do not have to call beacMan.getBeaconParsers().add() if we stick to AltBeacon protocol
-            beacMan.bind(BluetoothDetectorService.this);
-
-        }
-    }
-    */
-
 
     private static final String TAG = "Beacon Test";
     private BeaconManager beacMan;
@@ -68,59 +50,33 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
     private static final String DB_NAME = "app_test";
     private static final String DB_USER = "Ivan";
     private static final String DB_PASS = "Ivan";
-    private static final String DB_TABLE = "test_data";
+    private static final String DB_TABLE = "bluetoothdetectortest";
     private static final String COL_PID = "PID";
     private static final String COL_MONTH = "MONTH";
     private static final String COL_DAY = "DAY";
     private static final String COL_MS = "MS";
     private static final String COL_BEAC = "BEACON";
-
-    /*
-    public BluetoothDetectorService() {
-        super("BluetoothDetectorService");
-    }
-    */
+    private static final String COL_RSSI = "RSSI";
 
     @Override
     public void onCreate() {
         super.onCreate();
     }
 
-    /*
-    @Override
-    protected void onHandleIntent(Intent intent) {
-        Toast.makeText(BluetoothDetectorService.this, "service started", Toast.LENGTH_SHORT).show();
-
-        Bundle b = intent.getExtras();
-        P_USER = b.getString("USER");
-        DB_IP = b.getString("IP");
-        DB_PORT = b.getString("PORT");
-
-        Log.d(TAG, "In service, user: " + P_USER + " IP: " + DB_IP + " PORT: " + DB_PORT);
-
-
-        // Changes the delay for calculating distance from the default of 20 sec to 2.5 sec
-        BeaconManager.setRssiFilterImplClass(RunningAverageRssiFilter.class);
-        RunningAverageRssiFilter.setSampleExpirationMilliseconds(2500l);
-
-        beacMan = BeaconManager.getInstanceForApplication(BluetoothDetectorService.this);
-        // Do not have to call beacMan.getBeaconParsers().add() if we stick to AltBeacon protocol
-        beacMan.bind(BluetoothDetectorService.this);
-    }
-    */
-
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        //return super.onStartCommand(intent, flags, startId);
-        Toast.makeText(BluetoothDetectorService.this, "service started", Toast.LENGTH_SHORT).show();
+        Toast.makeText(BluetoothDetectorService.this, "Service started, please remember to press " +
+                "the stop service button before destroying the app in the application manager",
+                Toast.LENGTH_LONG).show();
 
         Bundle b = intent.getExtras();
         P_USER = b.getString("USER");
         DB_IP = b.getString("IP");
         DB_PORT = b.getString("PORT");
 
-        Log.d(TAG, "In service, user: " + P_USER + " IP: " + DB_IP + " PORT: " + DB_PORT);
-
+        TelephonyManager tManager = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
+        P_ID = tManager.getDeviceId();
+        Log.d(TAG, "device id: " + P_ID);
 
         // Changes the delay for calculating distance from the default of 20 sec to 2.5 sec
         BeaconManager.setRssiFilterImplClass(RunningAverageRssiFilter.class);
@@ -129,10 +85,8 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
         beacMan = BeaconManager.getInstanceForApplication(BluetoothDetectorService.this);
         // Do not have to call beacMan.getBeaconParsers().add() if we stick to AltBeacon protocol
         beacMan.bind(BluetoothDetectorService.this);
-
         return START_STICKY;
     }
-
 
     @Override
     public void onDestroy() {
@@ -184,12 +138,23 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
         beacMan.addRangeNotifier(new RangeNotifier() {
             @Override
             public void didRangeBeaconsInRegion(Collection<Beacon> collection, Region region) {
+
+                if (collection.isEmpty()) {
+                    beacMan.unbind(BluetoothDetectorService.this);
+                    Intent i = new Intent(BluetoothDetectorService.this, BluetoothDetectorService.class);
+                    stopService(i);
+                    Log.d(TAG, "Service stopped because no beacons in range");
+                }
+
+                // TODO replace with UTC time format in a string
+                Calendar now = Calendar.getInstance();
+                int month = now.get(Calendar.MONTH);
+                int day = now.get(Calendar.DAY_OF_MONTH);
+                long time = now.getTimeInMillis();
+
                 for(Beacon beac : collection) {
-                    Calendar now = Calendar.getInstance();
-                    int month = now.get(Calendar.MONTH);
-                    int day = now.get(Calendar.DAY_OF_MONTH);
-                    long ms = now.getTimeInMillis();
-                    Log.d(TAG, "time (ms)" + ms +
+
+                    Log.d(TAG, "time (ms)" + time +
                             " distance: " + beac.getDistance() + " UUID:" + beac.getId1() +
                             " Major:" + beac.getId2() + " Minor:" + beac.getId3() +
                             " RSSI:" + beac.getRssi());
@@ -203,18 +168,23 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
 
                     try {
                         String db = "jdbc:mysql://" + DB_IP + ":" + DB_PORT + "/" + DB_NAME;
+                        Log.d(TAG, "Connection string: " + db);
                         Connection connection = DriverManager.getConnection(db, DB_USER, DB_PASS);
                         Log.d(TAG, "got connection");
 
-                        String query = "INSERT INTO " + DB_TABLE + " (ID, NAME) VALUES(" + ms + ", 'Hello3');";
+                        //String query = "INSERT INTO " + DB_TABLE + " (ID, NAME) VALUES(" + ms + ", 'Hello3');";
+                        String query = "insert into " + DB_TABLE + " values('" + P_ID + "', '" +
+                                beac.getId3().toString() + "', " + month + ", " + day + ", " +
+                                time + ", " + beac.getDistance() + ", " + beac.getRssi() + ");";
                         Log.d(TAG, query);
                         PreparedStatement statement = connection.prepareStatement(query);
                         statement.execute();
                         Log.d(TAG, "query should be sent to db");
-                        // TODO look into closing the connection
+                        connection.close();
+                        Log.d(TAG, "connection closed");
 
                     } catch (Exception e) {
-                        Log.d(TAG, "Error in getting connection or sending query");
+                        Log.d(TAG, "Error in sending query");
                         e.printStackTrace();
                     }
 
