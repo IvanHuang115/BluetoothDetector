@@ -11,18 +11,28 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.util.UUID;
+
 public class MainActivity extends AppCompatActivity {
 
     private EditText ET_NAME;
     private EditText ET_IP;
     private EditText ET_PORT;
+    private EditText ET_DBUSER;
+    private EditText ET_DBPASS;
+    private EditText ET_UUID;
+    private EditText ET_MAJOR;
 
     private static final String TAG = "Beacon Test";
 
     private static String P_ID;
     private static String P_USER;
     private static String DB_IP;
-    private static String DB_PORT = "3306";
+    private static String DB_PORT;
+    private static String DB_USER;
+    private static String DB_PASS;
+    private static String UUID;
+    private static String MAJOR;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,12 +48,20 @@ public class MainActivity extends AppCompatActivity {
         ET_NAME = (EditText) findViewById(R.id.ET_NAME);
         ET_IP = (EditText) findViewById(R.id.ET_IP);
         ET_PORT = (EditText) findViewById(R.id.ET_PORT);
+        ET_DBUSER = (EditText) findViewById(R.id.ET_DBUSER);
+        ET_DBPASS = (EditText) findViewById(R.id.ET_DBPASS);
+        ET_UUID = (EditText) findViewById(R.id.ET_UUID);
+        ET_MAJOR = (EditText) findViewById(R.id.ET_MAJOR);
 
         // gets the user data from previous user input
         SharedPreferences sp = getSharedPreferences("BluetoothDetectorData", Context.MODE_PRIVATE);
         P_USER = sp.getString("SP_USER", "");
         DB_IP = sp.getString("SP_IP", "");
         DB_PORT = sp.getString("SP_PORT", "");
+        DB_USER = sp.getString("SP_DBUSER", "");
+        DB_PASS = sp.getString("SP_DBPASS", "");
+        UUID = sp.getString("SP_UUID", "");
+        MAJOR = sp.getString("SP_MAJOR", "");
         Log.d(TAG, "user: " + P_USER + " ip: " + DB_IP + " port: " + DB_PORT);
 
         // gets printed if it's the first time using the app
@@ -55,6 +73,10 @@ public class MainActivity extends AppCompatActivity {
         ET_NAME.setText(P_USER);
         ET_IP.setText(DB_IP);
         ET_PORT.setText(DB_PORT);
+        ET_DBUSER.setText(DB_USER);
+        ET_DBPASS.setText(DB_PASS);
+        ET_UUID.setText(UUID);
+        ET_MAJOR.setText(MAJOR);
     }
 
     @Override
@@ -67,16 +89,12 @@ public class MainActivity extends AppCompatActivity {
         P_USER = ET_NAME.getText().toString();
         DB_IP = ET_IP.getText().toString();
         DB_PORT = ET_PORT.getText().toString();
+        DB_USER = ET_DBUSER.getText().toString();
+        DB_PASS = ET_DBPASS.getText().toString();
+        UUID = ET_UUID.getText().toString();
+        MAJOR = ET_MAJOR.getText().toString();
 
-        SharedPreferences sp = getSharedPreferences("BluetoothDetectorData", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sp.edit();
-
-        // TODO Check for blank entry, eliminate white spaces, try connecting to the db
-        // saves user input as app data
-        editor.putString("SP_USER", ET_NAME.getText().toString());
-        editor.putString("SP_IP", ET_IP.getText().toString());
-        editor.putString("SP_PORT", ET_PORT.getText().toString());
-        editor.commit();
+        submitSavedPreferences();
 
         Toast.makeText(this, "Input received, please press the start service button",
                 Toast.LENGTH_LONG).show();
@@ -89,9 +107,12 @@ public class MainActivity extends AppCompatActivity {
 
             public void run() {
                 Intent i = new Intent(MainActivity.this, BluetoothDetectorService.class);
+
+                /*
                 i.putExtra("USER", P_USER);
                 i.putExtra("IP", DB_IP);
                 i.putExtra("PORT", DB_PORT);
+                */
 
                 startService(i);
             }
@@ -105,4 +126,42 @@ public class MainActivity extends AppCompatActivity {
         Intent i = new Intent(this, BluetoothDetectorService.class);
         stopService(i);
     }
+
+    public void debugPressed(View v) {
+        P_USER = "debug";
+        DB_IP = "192.168.0.17";
+        DB_PORT = "3306";
+        DB_USER = "Ivan";
+        DB_PASS = "Ivan";
+        UUID = "A580C8B8-89FE-4548-8A24-472B7DE1224C";
+        MAJOR = "0";
+
+        submitSavedPreferences();
+    }
+
+    public void submitSavedPreferences() {
+        SharedPreferences sp = getSharedPreferences("BluetoothDetectorData", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sp.edit();
+
+        // TODO Check for blank entry, eliminate white spaces, try connecting to the db
+        editor.putString("SP_USER", P_USER);
+        editor.putString("SP_IP", DB_IP);
+        editor.putString("SP_PORT", DB_PORT);
+        editor.putString("SP_DBUSER", DB_USER);
+        editor.putString("SP_DBPASS", DB_PASS);
+        editor.putString("SP_UUID", UUID);
+        editor.putString("SP_MAJOR", MAJOR);
+        editor.commit();
+
+        ET_NAME.setText(P_USER);
+        ET_IP.setText(DB_IP);
+        ET_PORT.setText(DB_PORT);
+        ET_DBUSER.setText(DB_USER);
+        ET_DBPASS.setText(DB_PASS);
+        ET_UUID.setText(UUID);
+        ET_MAJOR.setText(MAJOR);
+    }
+
+
+
 }

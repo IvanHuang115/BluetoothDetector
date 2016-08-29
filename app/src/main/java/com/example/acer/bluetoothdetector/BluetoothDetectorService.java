@@ -4,6 +4,7 @@ import android.app.IntentService;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -25,8 +26,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 
 /**
  * Created by Acer on 8/15/2016.
@@ -45,18 +49,17 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
 
     private static String P_ID;
     private static String P_USER;
-    private static String DB_IP = "137.110.97.150";
-    private static String DB_PORT = "3306";
-    private static final String DB_NAME = "app_test";
-    private static final String DB_USER = "Ivan";
-    private static final String DB_PASS = "Ivan";
-    private static final String DB_TABLE = "bluetoothdetectortest";
-    private static final String COL_PID = "PID";
-    private static final String COL_MONTH = "MONTH";
-    private static final String COL_DAY = "DAY";
-    private static final String COL_MS = "MS";
-    private static final String COL_BEAC = "BEACON";
-    private static final String COL_RSSI = "RSSI";
+    private static String DB_IP;
+    private static String DB_PORT;
+    private static final String DB_NAME = "BeaconDatabase";
+    private static final String DB_TABLE = "ProximityData";
+    // TODO DB_USER and DB_PASS will eventually be final
+    private static String DB_USER;
+    private static String DB_PASS;
+
+    private static String UUID;
+    private static String MAJOR;
+
 
     @Override
     public void onCreate() {
@@ -69,10 +72,24 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
                 "the stop service button before destroying the app in the application manager",
                 Toast.LENGTH_LONG).show();
 
+        /*
         Bundle b = intent.getExtras();
         P_USER = b.getString("USER");
         DB_IP = b.getString("IP");
         DB_PORT = b.getString("PORT");
+        */
+
+        SharedPreferences sp = getSharedPreferences("BluetoothDetectorData", Context.MODE_PRIVATE);
+        P_USER = sp.getString("SP_USER", "");
+        DB_IP = sp.getString("SP_IP", "");
+        DB_PORT = sp.getString("SP_PORT", "");
+        DB_USER = sp.getString("SP_DBUSER", "");
+        DB_PASS = sp.getString("SP_DBPASS", "");
+        UUID = sp.getString("SP_UUID", "");
+        MAJOR = sp.getString("SP_MAJOR", "");
+
+        Log.d(TAG, "(in service) user: " + P_USER + " ip: " + DB_IP + " dbuser: " + DB_USER +
+                " dbpass: " + DB_PASS + " uuid: " + UUID + " major " + MAJOR);
 
         TelephonyManager tManager = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
         P_ID = tManager.getDeviceId();
@@ -105,7 +122,7 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
         Log.d(TAG, "Entered onBeaconServiceConnect()");
 
         // Only detects beacons with a specific UUID
-        final Region reg = new Region("RadBeacons", Identifier.parse(REGION_UUID), null, null);
+        final Region reg = new Region("RadBeacons", Identifier.parse(UUID), null, null);
 
         beacMan.addMonitorNotifier(new MonitorNotifier() {
 
@@ -147,10 +164,16 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
                 }
 
                 // TODO replace with UTC time format in a string
+                /*
                 Calendar now = Calendar.getInstance();
                 int month = now.get(Calendar.MONTH);
                 int day = now.get(Calendar.DAY_OF_MONTH);
                 long time = now.getTimeInMillis();
+                */
+
+                DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd:HH:mm:ss:SSS");
+                Date date = new Date();
+                String time = dateFormat.format(date);
 
                 for(Beacon beac : collection) {
 
@@ -172,10 +195,15 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
                         Connection connection = DriverManager.getConnection(db, DB_USER, DB_PASS);
                         Log.d(TAG, "got connection");
 
-                        //String query = "INSERT INTO " + DB_TABLE + " (ID, NAME) VALUES(" + ms + ", 'Hello3');";
+                        /*
                         String query = "insert into " + DB_TABLE + " values('" + P_ID + "', '" +
                                 beac.getId3().toString() + "', " + month + ", " + day + ", " +
                                 time + ", " + beac.getDistance() + ", " + beac.getRssi() + ");";
+                        */
+                        String query = "INSERT INTO " + DB_TABLE + " VALUES(" + P_ID + ", " +
+                                beac.getId3().toString() + ", '" + time + "', " +
+                                beac.getDistance() + ", " + beac.getRssi() + ");";
+
                         Log.d(TAG, query);
                         PreparedStatement statement = connection.prepareStatement(query);
                         statement.execute();
@@ -183,8 +211,9 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
                         connection.close();
                         Log.d(TAG, "connection closed");
 
-                    } catch (Exception e) {
-                        Log.d(TAG, "Error in sending query");
+                    } catch (SQLException e) {
+                        Log.d(TAG, "SQL exception");
+                        Log.d(TAG, "Error " + e.getErrorCode() + ": " + e.getSQLState());
                         e.printStackTrace();
                     }
 
