@@ -31,6 +31,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * Created by Acer on 8/15/2016.
@@ -59,6 +60,7 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
 
     private static String UUID;
     private static String MAJOR;
+    private static String U_ID;
 
 
     @Override
@@ -87,6 +89,7 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
         DB_PASS = sp.getString("SP_DBPASS", "");
         UUID = sp.getString("SP_UUID", "");
         MAJOR = sp.getString("SP_MAJOR", "");
+        U_ID = sp.getString("SP_UID", "");
 
         Log.d(TAG, "(in service) user: " + P_USER + " ip: " + DB_IP + " dbuser: " + DB_USER +
                 " dbpass: " + DB_PASS + " uuid: " + UUID + " major " + MAJOR);
@@ -163,15 +166,16 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
                     Log.d(TAG, "Service stopped because no beacons in range");
                 }
 
-                // TODO replace with UTC time format in a string
-                /*
-                Calendar now = Calendar.getInstance();
-                int month = now.get(Calendar.MONTH);
+                Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+                int year = now.get(Calendar.YEAR);
+                int month = now.get(Calendar.MONTH) + 1;
                 int day = now.get(Calendar.DAY_OF_MONTH);
-                long time = now.getTimeInMillis();
-                */
+                int hour = now.get(Calendar.HOUR_OF_DAY);
+                int minute = now.get(Calendar.MINUTE);
+                int second = now.get(Calendar.SECOND);
 
-                DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd:HH:mm:ss:SSS");
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd:HH:mm:ss:SSS");
+                dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
                 Date date = new Date();
                 String time = dateFormat.format(date);
 
@@ -200,8 +204,10 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
                                 beac.getId3().toString() + "', " + month + ", " + day + ", " +
                                 time + ", " + beac.getDistance() + ", " + beac.getRssi() + ");";
                         */
-                        String query = "INSERT INTO " + DB_TABLE + " VALUES(" + P_ID + ", " +
-                                beac.getId3().toString() + ", '" + time + "', " +
+                        String query = "INSERT INTO " + DB_TABLE + " VALUES(" + U_ID + ", " + P_ID +
+                                ", " + beac.getId3().toString() + ", " + year + ", " + month +
+                                ", " + day + ", " + hour + ", " + minute + ", " + second +
+                                ", '" + time + "', " +
                                 beac.getDistance() + ", " + beac.getRssi() + ");";
 
                         Log.d(TAG, query);

@@ -22,6 +22,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText ET_DBPASS;
     private EditText ET_UUID;
     private EditText ET_MAJOR;
+    private EditText ET_UID;
 
     private static final String TAG = "Beacon Test";
 
@@ -33,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private static String DB_PASS;
     private static String UUID;
     private static String MAJOR;
+    private static String U_ID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
         ET_DBPASS = (EditText) findViewById(R.id.ET_DBPASS);
         ET_UUID = (EditText) findViewById(R.id.ET_UUID);
         ET_MAJOR = (EditText) findViewById(R.id.ET_MAJOR);
+        ET_UID = (EditText) findViewById(R.id.ET_UID);
 
         // gets the user data from previous user input
         SharedPreferences sp = getSharedPreferences("BluetoothDetectorData", Context.MODE_PRIVATE);
@@ -62,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
         DB_PASS = sp.getString("SP_DBPASS", "");
         UUID = sp.getString("SP_UUID", "");
         MAJOR = sp.getString("SP_MAJOR", "");
+        U_ID = sp.getString("SP_UID", "");
         Log.d(TAG, "user: " + P_USER + " ip: " + DB_IP + " port: " + DB_PORT);
 
         // gets printed if it's the first time using the app
@@ -77,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
         ET_DBPASS.setText(DB_PASS);
         ET_UUID.setText(UUID);
         ET_MAJOR.setText(MAJOR);
+        ET_UID.setText(U_ID);
     }
 
     @Override
@@ -93,6 +98,7 @@ public class MainActivity extends AppCompatActivity {
         DB_PASS = ET_DBPASS.getText().toString();
         UUID = ET_UUID.getText().toString();
         MAJOR = ET_MAJOR.getText().toString();
+        U_ID = ET_UID.getText().toString();
 
         submitSavedPreferences();
 
@@ -129,12 +135,13 @@ public class MainActivity extends AppCompatActivity {
 
     public void debugPressed(View v) {
         P_USER = "debug";
-        DB_IP = "192.168.0.17";
+        DB_IP = "192.168.0.24";
         DB_PORT = "3306";
-        DB_USER = "Ivan";
-        DB_PASS = "Ivan";
+        DB_USER = "beaconuser";
+        DB_PASS = "seelab";
         UUID = "A580C8B8-89FE-4548-8A24-472B7DE1224C";
         MAJOR = "0";
+        U_ID = "1234";
 
         submitSavedPreferences();
     }
@@ -151,6 +158,7 @@ public class MainActivity extends AppCompatActivity {
         editor.putString("SP_DBPASS", DB_PASS);
         editor.putString("SP_UUID", UUID);
         editor.putString("SP_MAJOR", MAJOR);
+        editor.putString("SP_UID", U_ID);
         editor.commit();
 
         ET_NAME.setText(P_USER);
@@ -160,6 +168,7 @@ public class MainActivity extends AppCompatActivity {
         ET_DBPASS.setText(DB_PASS);
         ET_UUID.setText(UUID);
         ET_MAJOR.setText(MAJOR);
+        ET_UID.setText(U_ID);
     }
 
 

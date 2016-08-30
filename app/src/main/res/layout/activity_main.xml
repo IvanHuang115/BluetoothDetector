@@ -21,6 +21,16 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="UID" />
+
+            <EditText
+                android:id="@+id/ET_UID"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:text="Name" />
 
             <EditText
