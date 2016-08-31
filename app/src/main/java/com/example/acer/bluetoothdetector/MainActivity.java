@@ -3,6 +3,7 @@ package com.example.acer.bluetoothdetector;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
@@ -11,6 +12,12 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.net.URL;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
@@ -26,6 +33,9 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "Beacon Test";
 
+    private static final String DB_NAME = "BeaconDatabase";
+    private static final String DB_TABLE = "ProximityData";
+    private static final String DB_UTABLE = "UserData";
     private static String P_ID;
     private static String P_USER;
     private static String DB_IP;
@@ -101,25 +111,28 @@ public class MainActivity extends AppCompatActivity {
         U_ID = ET_UID.getText().toString();
 
         submitSavedPreferences();
-
-        Toast.makeText(this, "Input received, please press the start service button",
-                Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "Input Received", Toast.LENGTH_LONG).show();
     }
 
     // gets called when Start Service button is pressed
     public void startServicePressed(View v) {
+
+        // check to see if the inputs are acceptable
+        SharedPreferences sp = getSharedPreferences("BluetoothDetectorData", Context.MODE_PRIVATE);
+        if (sp.getBoolean("SP_CONNECTIONERROR", false)) {
+            Toast.makeText(MainActivity.this, "Error: cannot connect to the database " +
+                    "based on the inputs, please reenter", Toast.LENGTH_LONG).show();
+            return;
+        } else {
+            Toast.makeText(this, "Service started",
+                    Toast.LENGTH_LONG).show();
+        }
+
         // create a new thread to run the service
         Thread t = new Thread() {
 
             public void run() {
                 Intent i = new Intent(MainActivity.this, BluetoothDetectorService.class);
-
-                /*
-                i.putExtra("USER", P_USER);
-                i.putExtra("IP", DB_IP);
-                i.putExtra("PORT", DB_PORT);
-                */
-
                 startService(i);
             }
 
@@ -150,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences sp = getSharedPreferences("BluetoothDetectorData", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sp.edit();
 
-        // TODO Check for blank entry, eliminate white spaces, try connecting to the db
+        // TODO Check for blank entry, eliminate white spaces
         editor.putString("SP_USER", P_USER);
         editor.putString("SP_IP", DB_IP);
         editor.putString("SP_PORT", DB_PORT);
@@ -169,8 +182,77 @@ public class MainActivity extends AppCompatActivity {
         ET_UUID.setText(UUID);
         ET_MAJOR.setText(MAJOR);
         ET_UID.setText(U_ID);
+
+        new CheckTask().execute();
     }
 
+    private class CheckTask extends AsyncTask<URL, Integer, Long> {
+
+        @Override
+        protected Long doInBackground(URL... params) {
+            SharedPreferences sp = getSharedPreferences("BluetoothDetectorData", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sp.edit();
+
+            // checks to see if the jdbc driver class exists
+            try {
+                Class.forName("com.mysql.jdbc.Driver").newInstance();
+                editor.putBoolean("SP_CONNECTIONERROR", false);
+                editor.commit();
+            } catch (Exception e) {
+                Log.d(TAG, "(in async task) Error finding new instance of the driver class");
+                e.printStackTrace();
+                editor.putBoolean("SP_CONNECTIONERROR", true);
+                editor.commit();
+                return null;
+            }
+
+            // checks to see if we can connect to the database based on the inputs given
+            try {
+                String db = "jdbc:mysql://" + DB_IP + ":" + DB_PORT + "/" + DB_NAME;
+                Log.d(TAG, "(in async task) Connection string: " + db);
+                Connection connection = DriverManager.getConnection(db, DB_USER, DB_PASS);
+                Log.d(TAG, "(in async task) got connection");
+                connection.close();
+                editor.putBoolean("SP_CONNECTIONERROR", false);
+                editor.commit();
+            } catch (SQLException e) {
+                Log.d(TAG, "(in async task) sql error");
+                editor.putBoolean("SP_CONNECTIONERROR", true);
+                editor.commit();
+                return null;
+            }
+
+            // checks to see if this user already exists in the database, if not, add it
+            try {
+                String db = "jdbc:mysql://" + DB_IP + ":" + DB_PORT + "/" + DB_NAME;
+                Log.d(TAG, "(in async task) Connection string: " + db);
+                Connection connection = DriverManager.getConnection(db, DB_USER, DB_PASS);
+                Log.d(TAG, "(in async task) got connection");
+                String query = "select * from " + DB_UTABLE + " where PID = " + P_ID;
+                Log.d(TAG, query);
+                PreparedStatement statement = connection.prepareStatement(query);
+                ResultSet result = statement.executeQuery();
+                Log.d(TAG, "(in async task) check PID query should be sent to db");
+                if (!result.next()) {
+                    query = "INSERT INTO " + DB_UTABLE + " VALUES(" + U_ID + ", " + P_ID + ", '"
+                            + P_USER + "')";
+                    Log.d(TAG, query);
+                    statement = connection.prepareStatement(query);
+                    statement.execute();
+                    Log.d(TAG, "inserted new user into the database");
+                }
+                result.close();
+                connection.close();
+                Log.d(TAG, "connection closed");
+            } catch (SQLException e) {
+                Log.d(TAG, "(in async task) Error in checking/inserting PID");
+                Log.d(TAG, "(in async task) SQL exception");
+                Log.d(TAG, "(in async task) Error " + e.getErrorCode() + ": " + e.getSQLState());
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
 
 
 }

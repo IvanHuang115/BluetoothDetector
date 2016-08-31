@@ -25,6 +25,7 @@ import org.altbeacon.beacon.service.RunningAverageRssiFilter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -54,6 +55,7 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
     private static String DB_PORT;
     private static final String DB_NAME = "BeaconDatabase";
     private static final String DB_TABLE = "ProximityData";
+    private static final String DB_UTABLE = "UserData";
     // TODO DB_USER and DB_PASS will eventually be final
     private static String DB_USER;
     private static String DB_PASS;
@@ -73,13 +75,6 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
         Toast.makeText(BluetoothDetectorService.this, "Service started, please remember to press " +
                 "the stop service button before destroying the app in the application manager",
                 Toast.LENGTH_LONG).show();
-
-        /*
-        Bundle b = intent.getExtras();
-        P_USER = b.getString("USER");
-        DB_IP = b.getString("IP");
-        DB_PORT = b.getString("PORT");
-        */
 
         SharedPreferences sp = getSharedPreferences("BluetoothDetectorData", Context.MODE_PRIVATE);
         P_USER = sp.getString("SP_USER", "");
@@ -199,16 +194,11 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
                         Connection connection = DriverManager.getConnection(db, DB_USER, DB_PASS);
                         Log.d(TAG, "got connection");
 
-                        /*
-                        String query = "insert into " + DB_TABLE + " values('" + P_ID + "', '" +
-                                beac.getId3().toString() + "', " + month + ", " + day + ", " +
-                                time + ", " + beac.getDistance() + ", " + beac.getRssi() + ");";
-                        */
                         String query = "INSERT INTO " + DB_TABLE + " VALUES(" + U_ID + ", " + P_ID +
                                 ", " + beac.getId3().toString() + ", " + year + ", " + month +
                                 ", " + day + ", " + hour + ", " + minute + ", " + second +
-                                ", '" + time + "', " +
-                                beac.getDistance() + ", " + beac.getRssi() + ");";
+                                ", '" + time + "', " + beac.getDistance() + ", " +
+                                beac.getRssi() + ");";
 
                         Log.d(TAG, query);
                         PreparedStatement statement = connection.prepareStatement(query);
