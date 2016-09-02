@@ -26,6 +26,7 @@ import java.util.Set;
 
 public class AddBeaconActivity extends AppCompatActivity {
 
+    /*
     private static final String TAG = "Beacon Test";
 
     private static final String DB_NAME = "BeaconDatabase";
@@ -41,9 +42,11 @@ public class AddBeaconActivity extends AppCompatActivity {
     private static String UUID;
     private static String MAJOR;
     private static String U_ID;
+    */
     private static String MINOR;
     private static String TXPOWER;
     private static String LOCATION;
+
 
 
     EditText ET_UID;
@@ -65,24 +68,27 @@ public class AddBeaconActivity extends AppCompatActivity {
         ET_TXPOWER = (EditText) findViewById(R.id.ET_ADDBEACON_TXPOWER);
         ET_LOCATION = (EditText) findViewById(R.id.ET_ADDBEACON_LOCATION);
 
+        /*
         SharedPreferences sp = getSharedPreferences("BluetoothDetectorData", Context.MODE_PRIVATE);
-        P_USER = sp.getString("SP_USER", "");
-        DB_IP = sp.getString("SP_IP", "");
-        DB_PORT = sp.getString("SP_PORT", "");
-        DB_USER = sp.getString("SP_DBUSER", "");
-        DB_PASS = sp.getString("SP_DBPASS", "");
-        UUID = sp.getString("SP_UUID", "");
-        MAJOR = sp.getString("SP_MAJOR", "");
-        U_ID = sp.getString("SP_UID", "");
-        ET_UID.setText(U_ID);
-        ET_UUID.setText(UUID);
-        ET_MAJOR.setText(MAJOR);
+        Globals.P_USER = sp.getString("SP_USER", "");
+        Globals.DB_IP = sp.getString("SP_IP", "");
+        Globals.DB_PORT = sp.getString("SP_PORT", "");
+        Globals.DB_USER = sp.getString("SP_DBUSER", "");
+        Globals.DB_PASS = sp.getString("SP_DBPASS", "");
+        Globals.UUID = sp.getString("SP_UUID", "");
+        Globals.MAJOR = sp.getString("SP_MAJOR", "");
+        Globals.U_ID = sp.getString("SP_UID", "");
+        */
+
+        ET_UID.setText(Globals.U_ID);
+        ET_UUID.setText(Globals.UUID);
+        ET_MAJOR.setText(Globals.MAJOR);
     }
 
     public void addBeaconPressed(View v) {
-        U_ID = ET_UID.getText().toString();
-        UUID = ET_UUID.getText().toString();
-        MAJOR = ET_MAJOR.getText().toString();
+        Globals.U_ID = ET_UID.getText().toString();
+        Globals.UUID = ET_UUID.getText().toString();
+        Globals.MAJOR = ET_MAJOR.getText().toString();
         MINOR = ET_MINOR.getText().toString();
         TXPOWER = ET_TXPOWER.getText().toString();
         LOCATION = ET_LOCATION.getText().toString();
@@ -100,30 +106,30 @@ public class AddBeaconActivity extends AppCompatActivity {
             try {
                 Class.forName("com.mysql.jdbc.Driver").newInstance();
             } catch (Exception e) {
-                Log.d(TAG, "(in add beacon task) Error finding new instance of the driver class");
+                Log.d(Globals.TAG, "(in add beacon task) Error finding new instance of the driver class");
                 e.printStackTrace();
                 return null;
             }
 
             try {
-                String db = "jdbc:mysql://" + DB_IP + ":" + DB_PORT + "/" + DB_NAME;
-                Log.d(TAG, "Connection string: " + db);
-                Connection connection = DriverManager.getConnection(db, DB_USER, DB_PASS);
-                Log.d(TAG, "got connection");
+                String db = "jdbc:mysql://" + Globals.DB_IP + ":" + Globals.DB_PORT + "/" + Globals.DB_NAME;
+                Log.d(Globals.TAG, "Connection string: " + db);
+                Connection connection = DriverManager.getConnection(db, Globals.DB_USER, Globals.DB_PASS);
+                Log.d(Globals.TAG, "got connection");
 
-                String query = "INSERT INTO " + DB_BTABLE + " VALUES(" + U_ID + ", '" + UUID +
-                        "', "  + MAJOR + ", " + MINOR + ", " + TXPOWER + ", '" + LOCATION + "')";
+                String query = "INSERT INTO " + Globals.DB_BTABLE + " VALUES(" + Globals.U_ID + ", '" + Globals.UUID +
+                        "', "  + Globals.MAJOR + ", " + MINOR + ", " + TXPOWER + ", '" + LOCATION + "')";
 
-                Log.d(TAG, query);
+                Log.d(Globals.TAG, query);
                 PreparedStatement statement = connection.prepareStatement(query);
                 statement.execute();
-                Log.d(TAG, "query should be sent to db");
+                Log.d(Globals.TAG, "query should be sent to db");
                 connection.close();
-                Log.d(TAG, "connection closed");
+                Log.d(Globals.TAG, "connection closed");
 
             } catch (SQLException e) {
-                Log.d(TAG, "SQL exception");
-                Log.d(TAG, "Error " + e.getErrorCode() + ": " + e.getSQLState());
+                Log.d(Globals.TAG, "SQL exception");
+                Log.d(Globals.TAG, "Error " + e.getErrorCode() + ": " + e.getSQLState());
                 e.printStackTrace();
             }
 

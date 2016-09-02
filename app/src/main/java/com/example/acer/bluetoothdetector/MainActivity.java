@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText ET_MAJOR;
     private EditText ET_UID;
 
+    /*
     private static final String TAG = "Beacon Test";
 
     private static final String DB_NAME = "BeaconDatabase";
@@ -46,17 +47,18 @@ public class MainActivity extends AppCompatActivity {
     private static String UUID;
     private static String MAJOR;
     private static String U_ID;
+    */
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d(TAG, "Activity Created");
+        Log.d(Globals.TAG, "Activity Created");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         // gets the unique identifier for each android device
         TelephonyManager tManager = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
-        P_ID = tManager.getDeviceId();
-        Log.d(TAG, "device id: " + P_ID);
+        Globals.P_ID = tManager.getDeviceId();
+        Log.d(Globals.TAG, "device id: " + Globals.P_ID);
 
         ET_NAME = (EditText) findViewById(R.id.ET_NAME);
         ET_IP = (EditText) findViewById(R.id.ET_IP);
@@ -69,31 +71,31 @@ public class MainActivity extends AppCompatActivity {
 
         // gets the user data from previous user input
         SharedPreferences sp = getSharedPreferences("BluetoothDetectorData", Context.MODE_PRIVATE);
-        P_USER = sp.getString("SP_USER", "");
-        DB_IP = sp.getString("SP_IP", "");
-        DB_PORT = sp.getString("SP_PORT", "");
-        DB_USER = sp.getString("SP_DBUSER", "");
-        DB_PASS = sp.getString("SP_DBPASS", "");
-        UUID = sp.getString("SP_UUID", "");
-        MAJOR = sp.getString("SP_MAJOR", "");
-        U_ID = sp.getString("SP_UID", "");
-        Log.d(TAG, "user: " + P_USER + " ip: " + DB_IP + " port: " + DB_PORT);
+        Globals.P_USER = sp.getString("SP_USER", "");
+        Globals.DB_IP = sp.getString("SP_IP", "");
+        Globals.DB_PORT = sp.getString("SP_PORT", "");
+        Globals.DB_USER = sp.getString("SP_DBUSER", "");
+        Globals.DB_PASS = sp.getString("SP_DBPASS", "");
+        Globals.UUID = sp.getString("SP_UUID", "");
+        Globals.MAJOR = sp.getString("SP_MAJOR", "");
+        Globals.U_ID = sp.getString("SP_UID", "");
+        Log.d(Globals.TAG, "user: " + Globals.P_USER + " ip: " + Globals.DB_IP + " port: " + Globals.DB_PORT);
 
         // gets printed if it's the first time using the app
-        if (P_USER.equals("") || DB_IP.equals("") || DB_PORT.equals("")) {
+        if (Globals.P_USER.equals("") || Globals.DB_IP.equals("") || Globals.DB_PORT.equals("")) {
             Toast.makeText(this, "Please enter your name and the IP address of your Raspberry Pi",
                     Toast.LENGTH_LONG).show();
         }
 
         // displays previous user input
-        ET_NAME.setText(P_USER);
-        ET_IP.setText(DB_IP);
-        ET_PORT.setText(DB_PORT);
-        ET_DBUSER.setText(DB_USER);
-        ET_DBPASS.setText(DB_PASS);
-        ET_UUID.setText(UUID);
-        ET_MAJOR.setText(MAJOR);
-        ET_UID.setText(U_ID);
+        ET_NAME.setText(Globals.P_USER);
+        ET_IP.setText(Globals.DB_IP);
+        ET_PORT.setText(Globals.DB_PORT);
+        ET_DBUSER.setText(Globals.DB_USER);
+        ET_DBPASS.setText(Globals.DB_PASS);
+        ET_UUID.setText(Globals.UUID);
+        ET_MAJOR.setText(Globals.MAJOR);
+        ET_UID.setText(Globals.U_ID);
     }
 
     @Override
@@ -109,14 +111,14 @@ public class MainActivity extends AppCompatActivity {
 
     // gets called when Enter button is pressed
     public void enterUserInfo(View v) {
-        P_USER = ET_NAME.getText().toString();
-        DB_IP = ET_IP.getText().toString();
-        DB_PORT = ET_PORT.getText().toString();
-        DB_USER = ET_DBUSER.getText().toString();
-        DB_PASS = ET_DBPASS.getText().toString();
-        UUID = ET_UUID.getText().toString();
-        MAJOR = ET_MAJOR.getText().toString();
-        U_ID = ET_UID.getText().toString();
+        Globals.P_USER = ET_NAME.getText().toString();
+        Globals.DB_IP = ET_IP.getText().toString();
+        Globals.DB_PORT = ET_PORT.getText().toString();
+        Globals.DB_USER = ET_DBUSER.getText().toString();
+        Globals.DB_PASS = ET_DBPASS.getText().toString();
+        Globals.UUID = ET_UUID.getText().toString();
+        Globals.MAJOR = ET_MAJOR.getText().toString();
+        Globals.U_ID = ET_UID.getText().toString();
 
         submitSavedPreferences();
         Toast.makeText(this, "Input Received", Toast.LENGTH_LONG).show();
@@ -156,14 +158,14 @@ public class MainActivity extends AppCompatActivity {
 
     // gets called when the default values button is pressed
     public void debugPressed(View v) {
-        P_USER = "debug";
-        DB_IP = "192.168.0.24";
-        DB_PORT = "3306";
-        DB_USER = "beaconuser";
-        DB_PASS = "seelab";
-        UUID = "A580C8B8-89FE-4548-8A24-472B7DE1224C";
-        MAJOR = "0";
-        U_ID = "1234";
+        Globals.P_USER = "debug";
+        Globals.DB_IP = "192.168.0.24";
+        Globals.DB_PORT = "3306";
+        Globals.DB_USER = "beaconuser";
+        Globals.DB_PASS = "seelab";
+        Globals.UUID = "A580C8B8-89FE-4548-8A24-472B7DE1224C";
+        Globals.MAJOR = "0";
+        Globals.U_ID = "1234";
 
         submitSavedPreferences();
     }
@@ -175,24 +177,24 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = sp.edit();
 
         // TODO Check for blank entry, eliminate white spaces
-        editor.putString("SP_USER", P_USER);
-        editor.putString("SP_IP", DB_IP);
-        editor.putString("SP_PORT", DB_PORT);
-        editor.putString("SP_DBUSER", DB_USER);
-        editor.putString("SP_DBPASS", DB_PASS);
-        editor.putString("SP_UUID", UUID);
-        editor.putString("SP_MAJOR", MAJOR);
-        editor.putString("SP_UID", U_ID);
+        editor.putString("SP_USER", Globals.P_USER);
+        editor.putString("SP_IP", Globals.DB_IP);
+        editor.putString("SP_PORT", Globals.DB_PORT);
+        editor.putString("SP_DBUSER", Globals.DB_USER);
+        editor.putString("SP_DBPASS", Globals.DB_PASS);
+        editor.putString("SP_UUID", Globals.UUID);
+        editor.putString("SP_MAJOR", Globals.MAJOR);
+        editor.putString("SP_UID", Globals.U_ID);
         editor.commit();
 
-        ET_NAME.setText(P_USER);
-        ET_IP.setText(DB_IP);
-        ET_PORT.setText(DB_PORT);
-        ET_DBUSER.setText(DB_USER);
-        ET_DBPASS.setText(DB_PASS);
-        ET_UUID.setText(UUID);
-        ET_MAJOR.setText(MAJOR);
-        ET_UID.setText(U_ID);
+        ET_NAME.setText(Globals.P_USER);
+        ET_IP.setText(Globals.DB_IP);
+        ET_PORT.setText(Globals.DB_PORT);
+        ET_DBUSER.setText(Globals.DB_USER);
+        ET_DBPASS.setText(Globals.DB_PASS);
+        ET_UUID.setText(Globals.UUID);
+        ET_MAJOR.setText(Globals.MAJOR);
+        ET_UID.setText(Globals.U_ID);
 
         // check to see if the inputted values provide a valid connection
         new CheckTask().execute();
@@ -214,7 +216,7 @@ public class MainActivity extends AppCompatActivity {
                 editor.putBoolean("SP_CONNECTIONERROR", false);
                 editor.commit();
             } catch (Exception e) {
-                Log.d(TAG, "(in async task) Error finding new instance of the driver class");
+                Log.d(Globals.TAG, "(in async task) Error finding new instance of the driver class");
                 e.printStackTrace();
                 editor.putBoolean("SP_CONNECTIONERROR", true);
                 editor.commit();
@@ -224,15 +226,15 @@ public class MainActivity extends AppCompatActivity {
             // checks to see if we can connect to the database based on the inputs given
             // store result into a shared preferences key/value, for startServicePressed() to check
             try {
-                String db = "jdbc:mysql://" + DB_IP + ":" + DB_PORT + "/" + DB_NAME;
-                Log.d(TAG, "(in async task) Connection string: " + db);
-                Connection connection = DriverManager.getConnection(db, DB_USER, DB_PASS);
-                Log.d(TAG, "(in async task) got connection");
+                String db = "jdbc:mysql://" + Globals.DB_IP + ":" + Globals.DB_PORT + "/" + Globals.DB_NAME;
+                Log.d(Globals.TAG, "(in async task) Connection string: " + db);
+                Connection connection = DriverManager.getConnection(db, Globals.DB_USER, Globals.DB_PASS);
+                Log.d(Globals.TAG, "(in async task) got connection");
                 connection.close();
                 editor.putBoolean("SP_CONNECTIONERROR", false);
                 editor.commit();
             } catch (SQLException e) {
-                Log.d(TAG, "(in async task) sql error");
+                Log.d(Globals.TAG, "(in async task) sql error");
                 editor.putBoolean("SP_CONNECTIONERROR", true);
                 editor.commit();
                 return null;
@@ -240,30 +242,30 @@ public class MainActivity extends AppCompatActivity {
 
             // checks to see if this user already exists in the database, if not, add it
             try {
-                String db = "jdbc:mysql://" + DB_IP + ":" + DB_PORT + "/" + DB_NAME;
-                Log.d(TAG, "(in async task) Connection string: " + db);
-                Connection connection = DriverManager.getConnection(db, DB_USER, DB_PASS);
-                Log.d(TAG, "(in async task) got connection");
-                String query = "select * from " + DB_UTABLE + " where PID = " + P_ID;
-                Log.d(TAG, query);
+                String db = "jdbc:mysql://" + Globals.DB_IP + ":" + Globals.DB_PORT + "/" + Globals.DB_NAME;
+                Log.d(Globals.TAG, "(in async task) Connection string: " + db);
+                Connection connection = DriverManager.getConnection(db, Globals.DB_USER, Globals.DB_PASS);
+                Log.d(Globals.TAG, "(in async task) got connection");
+                String query = "select * from " + Globals.DB_UTABLE + " where PID = " + Globals.P_ID;
+                Log.d(Globals.TAG, query);
                 PreparedStatement statement = connection.prepareStatement(query);
                 ResultSet result = statement.executeQuery();
-                Log.d(TAG, "(in async task) check PID query should be sent to db");
+                Log.d(Globals.TAG, "(in async task) check PID query should be sent to db");
                 if (!result.next()) {
-                    query = "INSERT INTO " + DB_UTABLE + " VALUES(" + U_ID + ", " + P_ID + ", '"
-                            + P_USER + "')";
-                    Log.d(TAG, query);
+                    query = "INSERT INTO " + Globals.DB_UTABLE + " VALUES(" + Globals.U_ID + ", " + Globals.P_ID + ", '"
+                            + Globals.P_USER + "')";
+                    Log.d(Globals.TAG, query);
                     statement = connection.prepareStatement(query);
                     statement.execute();
-                    Log.d(TAG, "inserted new user into the database");
+                    Log.d(Globals.TAG, "inserted new user into the database");
                 }
                 result.close();
                 connection.close();
-                Log.d(TAG, "connection closed");
+                Log.d(Globals.TAG, "connection closed");
             } catch (SQLException e) {
-                Log.d(TAG, "(in async task) Error in checking/inserting PID");
-                Log.d(TAG, "(in async task) SQL exception");
-                Log.d(TAG, "(in async task) Error " + e.getErrorCode() + ": " + e.getSQLState());
+                Log.d(Globals.TAG, "(in async task) Error in checking/inserting PID");
+                Log.d(Globals.TAG, "(in async task) SQL exception");
+                Log.d(Globals.TAG, "(in async task) Error " + e.getErrorCode() + ": " + e.getSQLState());
                 e.printStackTrace();
             }
             return null;

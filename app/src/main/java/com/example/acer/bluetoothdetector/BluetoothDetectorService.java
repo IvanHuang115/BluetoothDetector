@@ -40,7 +40,7 @@ import java.util.TimeZone;
 
 public class BluetoothDetectorService extends Service implements BeaconConsumer {
 
-    private static final String TAG = "Beacon Test";
+
     private BeaconManager beacMan;
     // All beacons have been set to this UUID
     private static final String REGION_UUID = "A580C8B8-89FE-4548-8A24-472B7DE1224C";
@@ -48,6 +48,9 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
     // Beacon 49994, Major: 0, Minor: 49994 ==> Beacon2
     // Beacon 50179, Major: 0, Minor: 50179 ==> Beacon3
     // Beacon 50337, Major: 0, Minor: 50337 ==> Beacon4
+
+    /*
+    private static final String TAG = "Beacon Test";
 
     private static String P_ID;
     private static String P_USER;
@@ -63,6 +66,7 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
     private static String UUID;
     private static String MAJOR;
     private static String U_ID;
+    */
 
 
     @Override
@@ -76,22 +80,24 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
                 "the stop service button before destroying the app in the application manager",
                 Toast.LENGTH_LONG).show();
 
+        /*
         SharedPreferences sp = getSharedPreferences("BluetoothDetectorData", Context.MODE_PRIVATE);
-        P_USER = sp.getString("SP_USER", "");
-        DB_IP = sp.getString("SP_IP", "");
-        DB_PORT = sp.getString("SP_PORT", "");
-        DB_USER = sp.getString("SP_DBUSER", "");
-        DB_PASS = sp.getString("SP_DBPASS", "");
-        UUID = sp.getString("SP_UUID", "");
-        MAJOR = sp.getString("SP_MAJOR", "");
-        U_ID = sp.getString("SP_UID", "");
+        Globals.P_USER = sp.getString("SP_USER", "");
+        Globals.DB_IP = sp.getString("SP_IP", "");
+        Globals.DB_PORT = sp.getString("SP_PORT", "");
+        Globals.DB_USER = sp.getString("SP_DBUSER", "");
+        Globals.DB_PASS = sp.getString("SP_DBPASS", "");
+        Globals.UUID = sp.getString("SP_UUID", "");
+        Globals.MAJOR = sp.getString("SP_MAJOR", "");
+        Globals.U_ID = sp.getString("SP_UID", "");
+        */
 
-        Log.d(TAG, "(in service) user: " + P_USER + " ip: " + DB_IP + " dbuser: " + DB_USER +
-                " dbpass: " + DB_PASS + " uuid: " + UUID + " major " + MAJOR);
+        Log.d(Globals.TAG, "(in service) user: " + Globals.P_USER + " ip: " + Globals.DB_IP + " dbuser: " + Globals.DB_USER +
+                " dbpass: " + Globals.DB_PASS + " uuid: " + Globals.UUID + " major " + Globals.MAJOR);
 
         TelephonyManager tManager = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
-        P_ID = tManager.getDeviceId();
-        Log.d(TAG, "device id: " + P_ID);
+        Globals.P_ID = tManager.getDeviceId();
+        Log.d(Globals.TAG, "device id: " + Globals.P_ID);
 
         // Changes the delay for calculating distance from the default of 20 sec to 2.5 sec
         BeaconManager.setRssiFilterImplClass(RunningAverageRssiFilter.class);
@@ -117,17 +123,17 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
 
     @Override
     public void onBeaconServiceConnect() {
-        Log.d(TAG, "Entered onBeaconServiceConnect()");
+        Log.d(Globals.TAG, "Entered onBeaconServiceConnect()");
 
         // Only detects beacons with a specific UUID
-        final Region reg = new Region("RadBeacons", Identifier.parse(UUID), null, null);
+        final Region reg = new Region("RadBeacons", Identifier.parse(Globals.UUID), null, null);
 
         beacMan.addMonitorNotifier(new MonitorNotifier() {
 
             @Override
             public void didEnterRegion(Region region) {
                 try {
-                    Log.d(TAG, "didEnterRegion");
+                    Log.d(Globals.TAG, "didEnterRegion");
                     beacMan.startRangingBeaconsInRegion(region);
                 } catch (RemoteException e) {
                     e.printStackTrace();
@@ -137,7 +143,7 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
             @Override
             public void didExitRegion(Region region) {
                 try {
-                    Log.d(TAG, "didExitRegion");
+                    Log.d(Globals.TAG, "didExitRegion");
                     beacMan.stopRangingBeaconsInRegion(region);
                 } catch (RemoteException e) {
                     e.printStackTrace();
@@ -158,7 +164,7 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
                     beacMan.unbind(BluetoothDetectorService.this);
                     Intent i = new Intent(BluetoothDetectorService.this, BluetoothDetectorService.class);
                     stopService(i);
-                    Log.d(TAG, "Service stopped because no beacons in range");
+                    Log.d(Globals.TAG, "Service stopped because no beacons in range");
                 }
 
                 Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
@@ -176,7 +182,7 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
 
                 for(Beacon beac : collection) {
 
-                    Log.d(TAG, "time (ms)" + time +
+                    Log.d(Globals.TAG, "time (ms)" + time +
                             " distance: " + beac.getDistance() + " UUID:" + beac.getId1() +
                             " Major:" + beac.getId2() + " Minor:" + beac.getId3() +
                             " RSSI:" + beac.getRssi());
@@ -184,32 +190,32 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
                     try {
                         Class.forName("com.mysql.jdbc.Driver").newInstance();
                     } catch (Exception e) {
-                        Log.d(TAG, "Error finding new instance of the driver class");
+                        Log.d(Globals.TAG, "Error finding new instance of the driver class");
                         e.printStackTrace();
                     }
 
                     try {
-                        String db = "jdbc:mysql://" + DB_IP + ":" + DB_PORT + "/" + DB_NAME;
-                        Log.d(TAG, "Connection string: " + db);
-                        Connection connection = DriverManager.getConnection(db, DB_USER, DB_PASS);
-                        Log.d(TAG, "got connection");
+                        String db = "jdbc:mysql://" + Globals.DB_IP + ":" + Globals.DB_PORT + "/" + Globals.DB_NAME;
+                        Log.d(Globals.TAG, "Connection string: " + db);
+                        Connection connection = DriverManager.getConnection(db, Globals.DB_USER, Globals.DB_PASS);
+                        Log.d(Globals.TAG, "got connection");
 
-                        String query = "INSERT INTO " + DB_TABLE + " VALUES(" + U_ID + ", " + P_ID +
+                        String query = "INSERT INTO " + Globals.DB_PTABLE + " VALUES(" + Globals.U_ID + ", " + Globals.P_ID +
                                 ", " + beac.getId3().toString() + ", " + year + ", " + month +
                                 ", " + day + ", " + hour + ", " + minute + ", " + second +
                                 ", '" + time + "', " + beac.getDistance() + ", " +
                                 beac.getRssi() + ");";
 
-                        Log.d(TAG, query);
+                        Log.d(Globals.TAG, query);
                         PreparedStatement statement = connection.prepareStatement(query);
                         statement.execute();
-                        Log.d(TAG, "query should be sent to db");
+                        Log.d(Globals.TAG, "query should be sent to db");
                         connection.close();
-                        Log.d(TAG, "connection closed");
+                        Log.d(Globals.TAG, "connection closed");
 
                     } catch (SQLException e) {
-                        Log.d(TAG, "SQL exception");
-                        Log.d(TAG, "Error " + e.getErrorCode() + ": " + e.getSQLState());
+                        Log.d(Globals.TAG, "SQL exception");
+                        Log.d(Globals.TAG, "Error " + e.getErrorCode() + ": " + e.getSQLState());
                         e.printStackTrace();
                     }
 
@@ -220,7 +226,7 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
         try {
             beacMan.startMonitoringBeaconsInRegion(reg);
         } catch (RemoteException e) {
-            Log.d(TAG, "problem in startMonitoringBeaconsInRegion");
+            Log.d(Globals.TAG, "problem in startMonitoringBeaconsInRegion");
             e.printStackTrace();
         }
     }
