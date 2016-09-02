@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Bluetooth Detector</string>
+    <string name="title_activity_devices">DevicesActivity</string>
 </resources>

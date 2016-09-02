@@ -36,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String DB_NAME = "BeaconDatabase";
     private static final String DB_TABLE = "ProximityData";
     private static final String DB_UTABLE = "UserData";
+    private static final String DB_BTABLE = "BeaconData";
     private static String P_ID;
     private static String P_USER;
     private static String DB_IP;
@@ -84,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.LENGTH_LONG).show();
         }
 
+        // displays previous user input
         ET_NAME.setText(P_USER);
         ET_IP.setText(DB_IP);
         ET_PORT.setText(DB_PORT);
@@ -98,6 +100,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
     }
+
+    public void devicesPressed(View v) {
+        Intent i = new Intent(this, DevicesActivity.class);
+        startActivity(i);
+    }
+
 
     // gets called when Enter button is pressed
     public void enterUserInfo(View v) {
@@ -146,6 +154,7 @@ public class MainActivity extends AppCompatActivity {
         stopService(i);
     }
 
+    // gets called when the default values button is pressed
     public void debugPressed(View v) {
         P_USER = "debug";
         DB_IP = "192.168.0.24";
@@ -159,6 +168,8 @@ public class MainActivity extends AppCompatActivity {
         submitSavedPreferences();
     }
 
+    // gets called in enterUserInfo() and debugPressed(), saves the user data into a saved
+    // preferences file
     public void submitSavedPreferences() {
         SharedPreferences sp = getSharedPreferences("BluetoothDetectorData", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sp.edit();
@@ -183,9 +194,13 @@ public class MainActivity extends AppCompatActivity {
         ET_MAJOR.setText(MAJOR);
         ET_UID.setText(U_ID);
 
+        // check to see if the inputted values provide a valid connection
         new CheckTask().execute();
     }
 
+    // this class runs as a separate thread that checks to see if there is a valid connection to
+    // the database. it also checks to see if the user's data is already in the database; if not,
+    // it adds it
     private class CheckTask extends AsyncTask<URL, Integer, Long> {
 
         @Override
@@ -207,6 +222,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             // checks to see if we can connect to the database based on the inputs given
+            // store result into a shared preferences key/value, for startServicePressed() to check
             try {
                 String db = "jdbc:mysql://" + DB_IP + ":" + DB_PORT + "/" + DB_NAME;
                 Log.d(TAG, "(in async task) Connection string: " + db);

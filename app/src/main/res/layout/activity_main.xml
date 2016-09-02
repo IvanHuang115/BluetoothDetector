@@ -121,6 +121,12 @@
                 android:layout_height="wrap_content"
                 android:onClick="debugPressed"
                 android:text="Default values (for debugging)"/>
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="devicesPressed"
+                android:text="Devices" />
         </LinearLayout>
     </ScrollView>
 
