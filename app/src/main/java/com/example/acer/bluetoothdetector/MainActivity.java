@@ -241,12 +241,13 @@ public class MainActivity extends AppCompatActivity {
             }
 
             // checks to see if this user already exists in the database, if not, add it
+            //TODO replace all this by calling query()
             try {
                 String db = "jdbc:mysql://" + Globals.DB_IP + ":" + Globals.DB_PORT + "/" + Globals.DB_NAME;
                 Log.d(Globals.TAG, "(in async task) Connection string: " + db);
                 Connection connection = DriverManager.getConnection(db, Globals.DB_USER, Globals.DB_PASS);
                 Log.d(Globals.TAG, "(in async task) got connection");
-                String query = "select * from " + Globals.DB_UTABLE + " where PID = " + Globals.P_ID;
+                String query = "SELECT * FROM " + Globals.DB_UTABLE + " WHERE PID = " + Globals.P_ID;
                 Log.d(Globals.TAG, query);
                 PreparedStatement statement = connection.prepareStatement(query);
                 ResultSet result = statement.executeQuery();
@@ -269,6 +270,11 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(Long aLong) {
+            super.onPostExecute(aLong);
         }
     }
 
