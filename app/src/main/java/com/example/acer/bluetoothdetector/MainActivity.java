@@ -55,10 +55,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Globals.status = "stopped";
+
         // gets the unique identifier for each android device
+        /*
         TelephonyManager tManager = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
         Globals.P_ID = tManager.getDeviceId();
         Log.d(Globals.TAG, "device id: " + Globals.P_ID);
+        */
 
         ET_NAME = (EditText) findViewById(R.id.ET_NAME);
         ET_IP = (EditText) findViewById(R.id.ET_IP);
@@ -100,6 +104,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        Intent i = new Intent(MainActivity.this, BluetoothDetectorService.class);
+        stopService(i);
         super.onDestroy();
     }
 
@@ -134,8 +140,8 @@ public class MainActivity extends AppCompatActivity {
                     "based on the inputs, please reenter", Toast.LENGTH_LONG).show();
             return;
         } else {
-            Toast.makeText(this, "Service started",
-                    Toast.LENGTH_LONG).show();
+            //Toast.makeText(this, "Service started",
+            //        Toast.LENGTH_LONG).show();
         }
 
         // create a new thread to run the service
@@ -152,7 +158,8 @@ public class MainActivity extends AppCompatActivity {
 
     // gets called when Stop Service button is pressed
     public void stopServicePressed(View v) {
-        Intent i = new Intent(this, BluetoothDetectorService.class);
+        Globals.status = "stopped";
+        Intent i = new Intent(MainActivity.this, BluetoothDetectorService.class);
         stopService(i);
     }
 
@@ -168,6 +175,22 @@ public class MainActivity extends AppCompatActivity {
         Globals.U_ID = "1234";
 
         submitSavedPreferences();
+    }
+
+    public void checkStatusPressed(View v) {
+        if (Globals.status.equals("sqlerror")) {
+            Toast.makeText(this, "SQL Error: Nothing is being sent to the database",
+                    Toast.LENGTH_LONG).show();
+        } else if (Globals.status.equals("stopped")) {
+            Toast.makeText(this, "Service is stopped or hasn't started", Toast.LENGTH_LONG).show();
+        } else if (Globals.status.equals("empty")) {
+            Toast.makeText(this, "Service is running, but no beacons in range. Nothing sent to database",
+                    Toast.LENGTH_LONG).show();
+        } else if (Globals.status.equals("fine")){
+                Toast.makeText(this, "Everything is fine, data is being sent to the database",
+                        Toast.LENGTH_LONG).show();
+        }
+
     }
 
     // gets called in enterUserInfo() and debugPressed(), saves the user data into a saved

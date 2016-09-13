@@ -119,6 +119,13 @@
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:onClick="checkStatusPressed"
+                android:text="Check Status"
+                />
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:onClick="debugPressed"
                 android:text="Default values (for debugging)"/>
 

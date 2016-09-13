@@ -32,6 +32,12 @@ public class DevicesActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        new BeaconDisplayTask().execute();
+    }
+
     public void addBeaconActivityPressed(View v) {
         Intent i = new Intent(this, AddBeaconActivity.class);
         startActivity(i);

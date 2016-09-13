@@ -33,6 +33,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.logging.Handler;
 
 /**
  * Created by Acer on 8/15/2016.
@@ -72,6 +73,14 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
     @Override
     public void onCreate() {
         super.onCreate();
+        beacMan = BeaconManager.getInstanceForApplication(BluetoothDetectorService.this);
+        // Changes the delay for calculating distance from the default of 20 sec to 2.5 sec
+        BeaconManager.setRssiFilterImplClass(RunningAverageRssiFilter.class);
+        RunningAverageRssiFilter.setSampleExpirationMilliseconds(2500l);
+
+
+        // Do not have to call beacMan.getBeaconParsers().add() if we stick to AltBeacon protocol
+        beacMan.bind(BluetoothDetectorService.this);
     }
 
     @Override
@@ -95,24 +104,22 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
         Log.d(Globals.TAG, "(in service) user: " + Globals.P_USER + " ip: " + Globals.DB_IP + " dbuser: " + Globals.DB_USER +
                 " dbpass: " + Globals.DB_PASS + " uuid: " + Globals.UUID + " major " + Globals.MAJOR);
 
+        /*
         TelephonyManager tManager = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
         Globals.P_ID = tManager.getDeviceId();
         Log.d(Globals.TAG, "device id: " + Globals.P_ID);
+        */
 
-        // Changes the delay for calculating distance from the default of 20 sec to 2.5 sec
-        BeaconManager.setRssiFilterImplClass(RunningAverageRssiFilter.class);
-        RunningAverageRssiFilter.setSampleExpirationMilliseconds(2500l);
 
-        beacMan = BeaconManager.getInstanceForApplication(BluetoothDetectorService.this);
-        // Do not have to call beacMan.getBeaconParsers().add() if we stick to AltBeacon protocol
-        beacMan.bind(BluetoothDetectorService.this);
         return START_STICKY;
     }
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
+        Globals.status = "stopped";
         beacMan.unbind(BluetoothDetectorService.this);
+        super.onDestroy();
+
     }
 
     @Nullable
@@ -160,14 +167,19 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
             @Override
             public void didRangeBeaconsInRegion(Collection<Beacon> collection, Region region) {
 
+                /*
                 if (collection.isEmpty()) {
                     beacMan.unbind(BluetoothDetectorService.this);
                     Intent i = new Intent(BluetoothDetectorService.this, BluetoothDetectorService.class);
                     stopService(i);
                     Log.d(Globals.TAG, "Service stopped because no beacons in range");
                 }
+                */
 
-                Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+                if (collection.isEmpty()) {
+                    Globals.status = "empty";
+                }
+                Calendar now = Calendar.getInstance(TimeZone.getTimeZone("PST"));
                 int year = now.get(Calendar.YEAR);
                 int month = now.get(Calendar.MONTH) + 1;
                 int day = now.get(Calendar.DAY_OF_MONTH);
@@ -176,7 +188,7 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
                 int second = now.get(Calendar.SECOND);
 
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd:HH:mm:ss:SSS");
-                dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+                dateFormat.setTimeZone(TimeZone.getTimeZone("PST"));
                 Date date = new Date();
                 String time = dateFormat.format(date);
 
@@ -212,12 +224,15 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
                         Log.d(Globals.TAG, "query should be sent to db");
                         connection.close();
                         Log.d(Globals.TAG, "connection closed");
+                        Globals.status = "fine";
 
                     } catch (SQLException e) {
                         Log.d(Globals.TAG, "SQL exception");
                         Log.d(Globals.TAG, "Error " + e.getErrorCode() + ": " + e.getSQLState());
+                        Globals.status = "sqlerror";
                         e.printStackTrace();
                     }
+
 
                 }
             }

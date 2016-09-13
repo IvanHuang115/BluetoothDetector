@@ -14,7 +14,7 @@ import java.sql.SQLException;
 public class Globals {
     public static final String TAG = "Beacon Test";
 
-    public static final String DB_NAME = "BeaconDatabase";
+    public static final String DB_NAME = "BeaconDatabasePST";
     public static final String DB_PTABLE = "ProximityData";
     public static final String DB_UTABLE = "UserData";
     public static final String DB_BTABLE = "BeaconData";
@@ -27,6 +27,8 @@ public class Globals {
     public static String UUID;
     public static String MAJOR;
     public static String U_ID;
+
+    public static String status;
 
     public static ResultSet query(String q) {
         ResultSet result = null;

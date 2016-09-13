@@ -59,10 +59,10 @@ public class BeaconArrayAdapter extends BaseAdapter {
 
         Beacon beac = beaconArray.get(position);
         tv_location.setText(beac.location);
-        tv_uuid.setText(beac.UUID);
-        tv_major.setText(Integer.toString(beac.major));
-        tv_minor.setText(Integer.toString(beac.minor));
-        tv_txpower.setText(Integer.toString(beac.txpower));
+        tv_uuid.setText("UUID: " + beac.UUID);
+        tv_major.setText("Major: " + Integer.toString(beac.major));
+        tv_minor.setText("Minor: " + Integer.toString(beac.minor));
+        tv_txpower.setText("TX: " + Integer.toString(beac.txpower));
         return row;
     }
 
