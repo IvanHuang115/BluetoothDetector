@@ -20,6 +20,7 @@ import org.altbeacon.beacon.Identifier;
 import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
+import org.altbeacon.beacon.service.ArmaRssiFilter;
 import org.altbeacon.beacon.service.RunningAverageRssiFilter;
 
 import java.sql.Connection;
@@ -42,7 +43,7 @@ import java.util.logging.Handler;
 public class BluetoothDetectorService extends Service implements BeaconConsumer {
 
 
-    private BeaconManager beacMan;
+    private BeaconManager beacMan = BeaconManager.getInstanceForApplication(BluetoothDetectorService.this);
     // All beacons have been set to this UUID
     private static final String REGION_UUID = "A580C8B8-89FE-4548-8A24-472B7DE1224C";
     // Beacon 49893, Major: 0, Minor: 49893 ==> Beacon1
@@ -73,14 +74,7 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
     @Override
     public void onCreate() {
         super.onCreate();
-        beacMan = BeaconManager.getInstanceForApplication(BluetoothDetectorService.this);
-        // Changes the delay for calculating distance from the default of 20 sec to 2.5 sec
-        BeaconManager.setRssiFilterImplClass(RunningAverageRssiFilter.class);
-        RunningAverageRssiFilter.setSampleExpirationMilliseconds(2500l);
 
-
-        // Do not have to call beacMan.getBeaconParsers().add() if we stick to AltBeacon protocol
-        beacMan.bind(BluetoothDetectorService.this);
     }
 
     @Override
@@ -104,11 +98,27 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
         Log.d(Globals.TAG, "(in service) user: " + Globals.P_USER + " ip: " + Globals.DB_IP + " dbuser: " + Globals.DB_USER +
                 " dbpass: " + Globals.DB_PASS + " uuid: " + Globals.UUID + " major " + Globals.MAJOR);
 
+        // TODO need to implement a dialog box for Android 6.0 for phone id permission, bluetooth
+        // permission
         /*
         TelephonyManager tManager = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
         Globals.P_ID = tManager.getDeviceId();
         Log.d(Globals.TAG, "device id: " + Globals.P_ID);
         */
+
+        //beacMan = BeaconManager.getInstanceForApplication(BluetoothDetectorService.this);
+
+        /*
+        // Changes the delay for calculating distance from the default of 20 sec to 2.5 sec
+        BeaconManager.setRssiFilterImplClass(RunningAverageRssiFilter.class);
+        RunningAverageRssiFilter.setSampleExpirationMilliseconds(2500l);
+        */
+
+        BeaconManager.setRssiFilterImplClass(ArmaRssiFilter.class);
+
+
+        // Do not have to call beacMan.getBeaconParsers().add() if we stick to AltBeacon protocol
+        beacMan.bind(BluetoothDetectorService.this);
 
 
         return START_STICKY;
@@ -212,11 +222,15 @@ public class BluetoothDetectorService extends Service implements BeaconConsumer 
                         Connection connection = DriverManager.getConnection(db, Globals.DB_USER, Globals.DB_PASS);
                         Log.d(Globals.TAG, "got connection");
 
+                        double dist = beac.getDistance();
+                        int status = 0;
+                        if (dist < 3) status = 1;
+
                         String query = "INSERT INTO " + Globals.DB_PTABLE + " VALUES(" + Globals.U_ID + ", " + Globals.P_ID +
                                 ", " + beac.getId3().toString() + ", " + year + ", " + month +
                                 ", " + day + ", " + hour + ", " + minute + ", " + second +
-                                ", '" + time + "', " + beac.getDistance() + ", " +
-                                beac.getRssi() + ");";
+                                ", '" + time + "', " + dist + ", " +
+                                beac.getRssi() + ", " + status + ");";
 
                         Log.d(Globals.TAG, query);
                         PreparedStatement statement = connection.prepareStatement(query);

@@ -104,8 +104,10 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        /*
         Intent i = new Intent(MainActivity.this, BluetoothDetectorService.class);
         stopService(i);
+        */
         super.onDestroy();
     }
 
